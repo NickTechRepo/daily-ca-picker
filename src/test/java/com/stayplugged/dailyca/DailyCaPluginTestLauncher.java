@@ -1,13 +1,17 @@
-package com.example;
+package com.stayplugged.dailyca;
 
 import net.runelite.client.RuneLite;
 import net.runelite.client.externalplugins.ExternalPluginManager;
 
-public class ExamplePluginTest
+public final class DailyCaPluginTestLauncher
 {
+	private DailyCaPluginTestLauncher()
+	{
+	}
+
 	public static void main(String[] args) throws Exception
 	{
-		ExternalPluginManager.loadBuiltin(ExamplePlugin.class);
+		ExternalPluginManager.loadBuiltin(DailyCaPlugin.class);
 		RuneLite.main(args);
 	}
 }
