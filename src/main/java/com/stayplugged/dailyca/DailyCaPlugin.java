@@ -82,7 +82,8 @@ public class DailyCaPlugin extends Plugin
 	protected void startUp()
 	{
 		library = CombatAchievementLibrary.loadBundled(gson);
-		panel = new DailyCaPanel(LinkBrowser::browse);
+		panel = new DailyCaPanel(LinkBrowser::browse,
+			(task, assignmentDate) -> clientThread.invoke(() -> announceIfNeeded(task, assignmentDate)));
 		navigationButton = NavigationButton.builder()
 			.tooltip("Daily CA Picker")
 			.icon(createIcon())
@@ -96,6 +97,10 @@ public class DailyCaPlugin extends Plugin
 	@Override
 	protected void shutDown()
 	{
+		if (panel != null)
+		{
+			panel.dispose();
+		}
 		if (navigationButton != null)
 		{
 			clientToolbar.removeNavigation(navigationButton);
@@ -123,6 +128,7 @@ public class DailyCaPlugin extends Plugin
 	{
 		if (shouldClearAccountState(event.getGameState()))
 		{
+			resetPanelReveal();
 			bankItemIds.clear();
 			wornItemIds.clear();
 			gearProfile = emptyGearProfile();
@@ -146,6 +152,7 @@ public class DailyCaPlugin extends Plugin
 	@Subscribe
 	public void onRuneScapeProfileChanged(RuneScapeProfileChanged event)
 	{
+		resetPanelReveal();
 		bankItemIds.clear();
 		wornItemIds.clear();
 		gearProfile = emptyGearProfile();
@@ -293,7 +300,6 @@ public class DailyCaPlugin extends Plugin
 					+ ", weighted toward your " + titleCase(config.currentTier().name()) + " progression.";
 		}
 		render(selected, today, reason);
-		announceIfNeeded(selected, today);
 	}
 
 	private CombatStats readCombatStats()
@@ -316,6 +322,17 @@ public class DailyCaPlugin extends Plugin
 			if (panel != null)
 			{
 				panel.render(task, shownGear, today, reason);
+			}
+		});
+	}
+
+	private void resetPanelReveal()
+	{
+		SwingUtilities.invokeLater(() ->
+		{
+			if (panel != null)
+			{
+				panel.resetTransientState();
 			}
 		});
 	}

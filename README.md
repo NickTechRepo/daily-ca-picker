@@ -15,7 +15,8 @@ For unchanged completion state, configuration, stats, and observed gear, the sam
 1. Enable **Daily CA Picker**.
 2. Choose **Current CA tier** and **Goal CA tier** in RuneLite settings.
 3. Equipped gear is observed immediately. Open your bank once so RuneLite supplies a complete bank snapshot; the plugin stores only three numeric capability scores: melee, ranged, and magic.
-4. Open the sidebar panel to view the daily task and its OSRS Wiki guide.
+4. Open the sidebar panel and unfurl the OSRS-style scroll with **Roll Today's CA**. The reveal is visual only: your account still receives one stable assignment for that calendar day.
+5. Use **Wiki guide** after the reveal to open the task's OSRS Wiki page.
 
 Bank-aware filtering activates only after a real bank snapshot has been received (or a prior profile-scoped scan exists). The panel shows the current scan state and never claims that an unopened bank was inspected.
 
