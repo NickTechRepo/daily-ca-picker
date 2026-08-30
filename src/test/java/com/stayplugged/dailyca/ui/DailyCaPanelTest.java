@@ -10,6 +10,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 
@@ -159,6 +160,21 @@ public class DailyCaPanelTest
 
 		assertFalse(panel.isRevealedForTest());
 		assertTrue(panel.getDisplayedTextForTest().contains("ROLL TODAY'S CA"));
+	}
+
+	@Test
+	public void revealCarriesTheRenderedSessionGeneration()
+	{
+		AtomicLong revealedGeneration = new AtomicLong(-1L);
+		DailyCaPanel panel = new DailyCaPanel(ignored -> { },
+			(task, date, generation) -> revealedGeneration.set(generation));
+		panel.render(new CombatAchievement(9, "Generation Challenge", CaTier.HARD, "Boss",
+			"Mechanical", "Complete the challenge.", ""),
+			new GearProfile(2, 2, 2, true), LocalDate.of(2026, 8, 19), "Daily selection.", 42L);
+
+		panel.revealImmediatelyForTest();
+
+		assertTrue(revealedGeneration.get() == 42L);
 	}
 
 	@Test

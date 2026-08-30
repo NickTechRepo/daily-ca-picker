@@ -57,21 +57,27 @@ public final class DailyCaPanel extends PluginPanel
 	private final JButton rollButton = new JButton("ROLL TODAY'S CA");
 	private final JButton wikiButton = new JButton("Wiki guide");
 	private final Consumer<String> openUrl;
-	private final BiConsumer<CombatAchievement, LocalDate> onReveal;
+	private final RevealListener onReveal;
 
 	private Timer revealTimer;
 	private CombatAchievement renderedTask;
 	private LocalDate renderedDate;
+	private long renderedSessionGeneration;
 	private String wikiUrl = "";
 	private boolean revealed;
 	private int revealFrame;
 
 	public DailyCaPanel(Consumer<String> openUrl)
 	{
-		this(openUrl, (ignoredTask, ignoredDate) -> { });
+		this(openUrl, (ignoredTask, ignoredDate, ignoredGeneration) -> { });
 	}
 
 	public DailyCaPanel(Consumer<String> openUrl, BiConsumer<CombatAchievement, LocalDate> onReveal)
+	{
+		this(openUrl, (task, date, ignoredGeneration) -> onReveal.accept(task, date));
+	}
+
+	public DailyCaPanel(Consumer<String> openUrl, RevealListener onReveal)
 	{
 		this.openUrl = openUrl;
 		this.onReveal = onReveal;
@@ -141,10 +147,18 @@ public final class DailyCaPanel extends PluginPanel
 
 	public void render(CombatAchievement task, GearProfile gear, LocalDate date, String reason)
 	{
+		render(task, gear, date, reason, 0L);
+	}
+
+	public void render(CombatAchievement task, GearProfile gear, LocalDate date, String reason,
+		long sessionGeneration)
+	{
 		boolean assignmentChanged = !Objects.equals(renderedDate, date)
-			|| taskId(renderedTask) != taskId(task);
+			|| taskId(renderedTask) != taskId(task)
+			|| renderedSessionGeneration != sessionGeneration;
 		renderedTask = task;
 		renderedDate = date;
+		renderedSessionGeneration = sessionGeneration;
 		dateLabel.setText(date.format(DateTimeFormatter.ofPattern("dd MMMM yyyy")));
 
 		if (task == null)
@@ -225,7 +239,7 @@ public final class DailyCaPanel extends PluginPanel
 		rollButton.setText("TODAY'S CA REVEALED");
 		rollButton.setEnabled(false);
 		wikiButton.setEnabled(!wikiUrl.isEmpty());
-		onReveal.accept(renderedTask, renderedDate);
+		onReveal.onReveal(renderedTask, renderedDate, renderedSessionGeneration);
 		revalidate();
 		repaint();
 	}
@@ -296,6 +310,7 @@ public final class DailyCaPanel extends PluginPanel
 		cancelRevealTimer();
 		renderedTask = null;
 		renderedDate = null;
+		renderedSessionGeneration = 0L;
 		wikiUrl = "";
 		showWaitingState();
 	}
@@ -396,6 +411,7 @@ public final class DailyCaPanel extends PluginPanel
 		{
 			setOpaque(false);
 			setMinimumSize(new Dimension(190, 235));
+			setPreferredSize(new Dimension(190, 235));
 		}
 
 		@Override
@@ -455,5 +471,11 @@ public final class DailyCaPanel extends PluginPanel
 			g.fillRect(middle - 3, 1, 6, 6);
 			g.dispose();
 		}
+	}
+
+	@FunctionalInterface
+	public interface RevealListener
+	{
+		void onReveal(CombatAchievement task, LocalDate assignmentDate, long sessionGeneration);
 	}
 }

@@ -30,6 +30,13 @@ public class DailyCaPluginMetadataTest
 	}
 
 	@Test
+	public void rejectsRevealCallbacksFromAnEarlierAccountSession()
+	{
+		assertTrue(DailyCaPlugin.isCurrentSession(7L, 7L));
+		assertFalse(DailyCaPlugin.isCurrentSession(7L, 8L));
+	}
+
+	@Test
 	public void partialWornSnapshotDoesNotEraseStoredBankCapabilities()
 	{
 		GearProfile stored = new GearProfile(4, 4, 3, true);

@@ -77,13 +77,20 @@ public class DailyCaPlugin extends Plugin
 	private LocalDate lastRenderedDate;
 	private LocalDate lastAnnouncedDate;
 	private long lastAnnouncedAccountHash = -1L;
+	private long sessionGeneration;
 
 	@Override
 	protected void startUp()
 	{
 		library = CombatAchievementLibrary.loadBundled(gson);
 		panel = new DailyCaPanel(LinkBrowser::browse,
-			(task, assignmentDate) -> clientThread.invoke(() -> announceIfNeeded(task, assignmentDate)));
+			(task, assignmentDate, generation) -> clientThread.invoke(() ->
+			{
+				if (isCurrentSession(generation, sessionGeneration))
+				{
+					announceIfNeeded(task, assignmentDate);
+				}
+			}));
 		navigationButton = NavigationButton.builder()
 			.tooltip("Daily CA Picker")
 			.icon(createIcon())
@@ -317,17 +324,19 @@ public class DailyCaPlugin extends Plugin
 	private void render(CombatAchievement task, LocalDate today, String reason)
 	{
 		GearProfile shownGear = config.useBankGear() ? gearProfile : new GearProfile(4, 4, 4, true);
+		long shownSessionGeneration = sessionGeneration;
 		SwingUtilities.invokeLater(() ->
 		{
 			if (panel != null)
 			{
-				panel.render(task, shownGear, today, reason);
+				panel.render(task, shownGear, today, reason, shownSessionGeneration);
 			}
 		});
 	}
 
 	private void resetPanelReveal()
 	{
+		sessionGeneration++;
 		SwingUtilities.invokeLater(() ->
 		{
 			if (panel != null)
@@ -390,6 +399,11 @@ public class DailyCaPlugin extends Plugin
 	static boolean isNewDate(LocalDate renderedDate, LocalDate currentDate)
 	{
 		return renderedDate == null || !renderedDate.equals(currentDate);
+	}
+
+	static boolean isCurrentSession(long callbackGeneration, long currentGeneration)
+	{
+		return callbackGeneration == currentGeneration;
 	}
 
 	private static boolean isInternalGearKey(String key)
